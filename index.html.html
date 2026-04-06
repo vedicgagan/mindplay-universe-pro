@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MindPlay Universe PRO</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    padding: 20px;
+    color: white;
+    background: linear-gradient(45deg, #141e30, #243b55);
+}
+
+/* Buttons */
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+button:hover {
+    transform: scale(1.1);
+}
+
+/* Sections */
+.section { display: none; }
+.active { display: block; }
+
+/* Chat UI */
+#chatBox {
+    height: 250px;
+    overflow-y: auto;
+    border: 1px solid white;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.user, .ai {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    max-width: 70%;
+}
+.user {
+    background: #00c6ff;
+    margin-left: auto;
+}
+.ai {
+    background: #ff512f;
+    margin-right: auto;
+}
+
+/* Wheel */
+#wheel {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 5px solid white;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 2s;
+}
+
+/* XP */
+.bar {
+    width: 300px;
+    background: #444;
+    margin: auto;
+    border-radius: 10px;
+}
+.progress {
+    height: 15px;
+    width: 0%;
+    background: lime;
+    border-radius: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🧠 MindPlay Universe PRO</h1>
+
+<h3 id="xp">XP: 0</h3>
+<div class="bar"><div class="progress" id="bar"></div></div>
+
+<!-- NAV -->
+<button onclick="show('chat')">🤖 Chat</button>
+<button onclick="show('reflex')">⚡ Reflex</button>
+<button onclick="show('wheel')">🎡 Wheel</button>
+<button onclick="show('brain')">🧠 Brain</button>
+<button onclick="show('theme')">🌈 Theme</button>
+
+<!-- CHAT -->
+<div id="chat" class="section active">
+    <div id="chatBox"></div>
+    <input id="input" placeholder="Type..." style="width:70%;padding:10px;">
+    <button onclick="send()">Send</button>
+</div>
+
+<!-- REFLEX -->
+<div id="reflex" class="section">
+    <button id="refBtn">Start</button>
+    <p id="refRes"></p>
+</div>
+
+<!-- WHEEL -->
+<div id="wheel" class="section">
+    <div id="wheelUI">🎁</div>
+    <button onclick="spin()">Spin</button>
+    <p id="wheelRes"></p>
+    <p id="streak"></p>
+</div>
+
+<!-- BRAIN -->
+<div id="brain" class="section">
+    <p id="instruction"></p>
+    <button id="red">RED</button>
+    <button id="blue">BLUE</button>
+    <p id="brainRes"></p>
+</div>
+
+<!-- THEME -->
+<div id="theme" class="section">
+    <button onclick="changeTheme()">Change Theme</button>
+</div>
+
+<script>
+
+// SOUND
+function sound(freq){
+    let ctx=new AudioContext();
+    let osc=ctx.createOscillator();
+    osc.frequency.value=freq;
+    osc.connect(ctx.destination);
+    osc.start();
+    setTimeout(()=>osc.stop(),100);
+}
+
+// XP STORAGE
+let xp=localStorage.getItem("xp")||0;
+updateXP();
+
+function addXP(v){
+    xp=parseInt(xp)+v;
+    localStorage.setItem("xp",xp);
+    updateXP();
+}
+
+function updateXP(){
+    document.getElementById("xp").innerText="XP: "+xp;
+    document.getElementById("bar").style.width=(xp%100)+"%";
+}
+
+// NAV
+function show(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+//////////////// CHAT
+document.getElementById("input").addEventListener("keypress",e=>{
+    if(e.key==="Enter") send();
+});
+
+function send(){
+    let txt=input.value.trim();
+    if(!txt) return;
+
+    addMsg("user",txt);
+    let reply=ai(txt);
+
+    setTimeout(()=>{
+        addMsg("ai",reply);
+        addXP(5);
+    },400);
+
+    input.value="";
+}
+
+function addMsg(type,text){
+    let d=document.createElement("div");
+    d.className=type;
+    d.innerText=text;
+    chatBox.appendChild(d);
+    chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+function ai(t){
+    t=t.toLowerCase();
+    if(t.includes("hi")) return "Hello 😊";
+    if(t.includes("sad")) return "I'm here 💙";
+    if(t.includes("happy")) return "Great! 🎉";
+    if(t.includes("joke")) return "Why AI? Because HI was taken 😂";
+    return "Tell me more 🤔";
+}
+
+//////////////// REFLEX
+let start;
+refBtn.onclick=()=>{
+    refBtn.innerText="Wait...";
+    setTimeout(()=>{
+        refBtn.innerText="CLICK!";
+        start=Date.now();
+    },Math.random()*3000+1000);
+};
+
+refBtn.addEventListener("click",()=>{
+    if(refBtn.innerText==="CLICK!"){
+        let t=Date.now()-start;
+        refRes.innerText=t+" ms";
+        addXP(15);
+        sound(600);
+        refBtn.innerText="Start";
+    }
+});
+
+//////////////// WHEEL
+let spinning=false,streak=0;
+
+function spin(){
+    if(spinning) return;
+    spinning=true;
+
+    let w=wheelUI;
+    let deg=Math.random()*720+720;
+    w.style.transform="rotate("+deg+"deg)";
+
+    let rewards=[10,20,-10,0,50];
+
+    setTimeout(()=>{
+        let val=rewards[Math.floor(Math.random()*rewards.length)];
+        wheelRes.innerText="XP: "+val;
+
+        addXP(val);
+
+        if(val>0){streak++;sound(800);} else streak=0;
+
+        streakText="🔥 Streak: "+streak;
+        document.getElementById("streak").innerText=streakText;
+
+        if(streak===3){
+            addXP(30);
+            alert("🔥 BONUS!");
+            streak=0;
+        }
+
+        if(val===50){
+            document.body.style.background="linear-gradient(gold,orange)";
+        }
+
+        spinning=false;
+    },2000);
+}
+
+//////////////// BRAIN
+function round(){
+    let t=Math.random()>0.5?"RED":"BLUE";
+    instruction.innerText="Click opposite of "+t;
+
+    red.onclick=()=>check(t,"red");
+    blue.onclick=()=>check(t,"blue");
+}
+round();
+
+function check(t,c){
+    let correct=(t==="RED"&&c==="blue")||(t==="BLUE"&&c==="red");
+    brainRes.innerText=correct?"Correct 😎":"Wrong 😵";
+    addXP(correct?10:-5);
+    round();
+}
+
+//////////////// THEME
+function changeTheme(){
+    let c=[
+        "linear-gradient(45deg,#ff512f,#dd2476)",
+        "linear-gradient(45deg,#00c6ff,#0072ff)",
+        "linear-gradient(45deg,#43e97b,#38f9d7)"
+    ];
+    document.body.style.background=c[Math.floor(Math.random()*c.length)];
+}
+
+</script>
+
+</body>
+</html>
